@@ -1,0 +1,80 @@
+services:
+  # PostgreSQL Database with pgvector extension
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: iris_postgres_dev
+    environment:
+      POSTGRES_USER: kinhcong_user
+      POSTGRES_PASSWORD: kinhcong_pw
+      POSTGRES_DB: kinhcong
+      POSTGRES_HOST_AUTH_METHOD: trust
+      TZ: Asia/Ho_Chi_Minh
+    command: postgres -c timezone='Asia/Ho_Chi_Minh'
+    volumes:
+      - ./docker_data/pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U kinhcong_user -d kinhcong" ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 90s
+    networks:
+      - iris_network
+    restart: unless-stopped
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: iris_redis_dev
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./docker_data/redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - iris_network
+    restart: unless-stopped
+
+  # pgAdmin (Database management)
+  pgadmin:
+    image: dpage/pgadmin4:9.10
+    container_name: iris_pgadmin_dev
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@iris.ai
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - ./docker_data/pgadmin_data:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - iris_network
+    restart: unless-stopped
+
+  # Redis Insight (Redis management)
+  redis-insight:
+    image: redis/redisinsight:2.44.0
+    container_name: iris_redis_insight_dev
+    ports:
+      - "8389:5540"
+    volumes:
+      - ./docker_data/redis_insight_data:/db
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - iris_network
+    restart: unless-stopped
+
+networks:
+  iris_network:
+    driver: bridge
