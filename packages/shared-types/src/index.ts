@@ -27,6 +27,10 @@ export * from './summary'; // Summary, CreateSummaryInput
 export * from './schedule'; // FetchSchedule, CreateScheduleInput
 export * from './tool'; // ToolRequest, CreateToolRequestInput (ToolRequestStatus from enums)
 export * from './product-internal'; // Product, CreateProductInput, UpdateProductInput, ProductQueryFilters
+export * from './product-artifact'; // ProductArtifact, ProductArtifactDto, CreateProductArtifactInput
+export * from './product-workflow'; // ProductWorkflow, ProductWorkflowDto, CreateProductWorkflowInput
+export * from './product-review-audit'; // ProductReviewAuditLog, ProductReviewAuditLogDto
+export * from './review-internal'; // Review, CreateReviewInput, UpdateReviewInput, ReviewQueryFilters
 export * from './auth-internal'; // JWTPayload, LoginInput, RegisterInput, ChatMessage, ChatRequest
 
 // Error types

@@ -29,6 +29,19 @@ export interface ProductDto {
     features: string[];
     installGuide?: string;
     metadata: Record<string, any>;
+    // Phase 1 new fields
+    changelog?: string;
+    license?: string;
+    authorContact?: string;
+    supportUrl?: string;
+    screenshots?: string[];
+    platformRequirements?: Record<string, any>;
+    ownershipDeclaration?: boolean;
+    ownershipProofUrl?: string;
+    termsAcceptedAt?: string | null;
+    securityScanStatus?: string;
+    securityScanResult?: Record<string, any>;
+    securityScanAt?: string | null;
     createdAt: string;
     updatedAt: string;
 }
@@ -52,6 +65,15 @@ export interface CreateProductDto {
     features?: string[];
     installGuide?: string;
     metadata?: Record<string, any>;
+    // Phase 1 new fields
+    changelog?: string;
+    license?: string;
+    authorContact?: string;
+    supportUrl?: string;
+    screenshots?: string[];
+    platformRequirements?: Record<string, any>;
+    ownershipDeclaration?: boolean;
+    ownershipProofUrl?: string;
 }
 
 /**
@@ -73,6 +95,15 @@ export interface UpdateProductDto {
     features?: string[];
     installGuide?: string;
     metadata?: Record<string, any>;
+    // Phase 1 new fields
+    changelog?: string;
+    license?: string;
+    authorContact?: string;
+    supportUrl?: string;
+    screenshots?: string[];
+    platformRequirements?: Record<string, any>;
+    ownershipDeclaration?: boolean;
+    ownershipProofUrl?: string;
 }
 
 /**

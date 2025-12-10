@@ -1,0 +1,1156 @@
+{
+  "name": "BOT - K.VH - final",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Pipeline\n1. Correction/normalize\nMục tiêu: biến một câu méo mó thành câu đúng.\nĐể đạt được điều này, mô hình phải hành xử như đang “nghe” user nói một câu sai và “đáp lại” bằng câu đúng.\nCấu trúc system–user–assistant tạo ra khung ngữ cảnh mà LLM quen xử lý nhất cho dạng paraphrasing.\nNếu không dùng ba vai, output thường nhiễu, xen giải thích, hoặc không chịu giữ nguyên nghĩa.\n\n2. Intent classifier\nKhông phải hội thoại.\nChỉ là nhiệm vụ phân loại dạng “input → label”.\nKhông cần tạo illusion hội thoại.\nSystem prompt đơn là đủ.\nNếu thêm user–assistant structure, mô hình dễ chuyển sang kiểu “trả lời người dùng”, không phải “trả về JSON thuần”.\n\n3. Parameter extraction\nGiống classifier.\nNhiệm vụ trích xuất slot.\nKhông phải hội thoại.\nKhông được phép sinh câu trả lời tự nhiên.\nChỉ cần system prompt để ép vào chế độ máy.\nKhông dùng user–assistant để tránh mô hình bịa thêm ý.\n\nKết luận:\nCorrection/normalize cần mô hình ở mode hội thoại để sửa câu.\nClassifier và extractor cần mô hình ở mode tác vụ thuần để trả JSON deterministically.",
+        "height": 816,
+        "width": 448
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1008,
+        -16
+      ],
+      "typeVersion": 1,
+      "id": "9d8756f5-3b9b-48e2-9f2b-7268e7ded825",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Pipeline\n\nLLM Correction/Normalization\n– Chỉ sửa lỗi gõ.\n– Không hiểu ý.\n– Không suy luận intent.\n\nIntent Classifier (rules hoặc LLM)\n– Xác định người dùng đang muốn hành động gì.\n– Quyết định nghiệp vụ SharePoint nào sẽ chạy.\n– Dựa vào input đã được sửa.\n\nParameter Extraction (LLM)\n– Chỉ chạy nếu intent yêu cầu tham số.\n– Lấy: mã đơn, ngày, tỉnh, trạng thái, số điện thoại…\n– Format trả về chuẩn JSON để đưa vào filter.\n\nSharePoint Query\n– Dùng param đã extract để filter.\n– Không có phép suy luận tại tầng này.",
+        "height": 480,
+        "width": 448
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -544,
+        -16
+      ],
+      "typeVersion": 1,
+      "id": "99a0cfdd-9f8c-4f15-a8d1-83c399ce1b06",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## 1. Correction/Normalization",
+        "height": 352,
+        "width": 1152,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -1072,
+        896
+      ],
+      "typeVersion": 1,
+      "id": "8790113a-6aef-4104-982a-ead911747b87",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "operation": "get",
+        "chatId": {
+          "__rl": true,
+          "value": "={{ $('Microsoft Teams Trigger').item.json['@odata.id'].match(/chats\\('(.*?)'\\)/)[1] }}",
+          "mode": "id"
+        },
+        "messageId": "={{ $('Microsoft Teams Trigger').item.json.id }}"
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        1008
+      ],
+      "id": "a4d6c1b3-d937-4c61-9025-ea1d47a2ea58",
+      "name": "Get chat message",
+      "webhookId": "bc38633e-dd05-435d-9287-ca7e9a3e1769",
+      "executeOnce": true,
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "ZDMZF96OBrYJ6BLY",
+          "name": "config AD"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b952255a-3cf4-4b14-8207-e18440b2d5c1",
+              "leftValue": "={{ $json.from.user.id }}",
+              "rightValue": "aa0a6688-37e7-4bee-ad95-ef587115cbb8",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "7d8aaca5-7b57-4571-9348-06bb0e01ccca",
+              "leftValue": "={{ $json.mentions[0].mentionText }}",
+              "rightValue": "BOT",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -656,
+        1008
+      ],
+      "id": "fa606c4a-886e-484f-b469-cfaf0c258c25",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "event": "newChatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "19:959fada8-40c9-4ea9-9a96-35acbbdfb6f1_aa0a6688-37e7-4bee-ad95-ef587115cbb8@unq.gbl.spaces",
+          "mode": "list",
+          "cachedResultName": "Nguyễn Tuấn Dũng, BOT Kinh Công (oneOnOne)",
+          "cachedResultUrl": "https://teams.microsoft.com/l/chat/19%3A959fada8-40c9-4ea9-9a96-35acbbdfb6f1_aa0a6688-37e7-4bee-ad95-ef587115cbb8%40unq.gbl.spaces/0?tenantId=6ea838f0-f529-455e-9738-147060990b55"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftTeamsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1056,
+        1008
+      ],
+      "id": "945e3ba5-6c20-4d96-838f-cbead8300954",
+      "name": "Microsoft Teams Trigger",
+      "webhookId": "f3d1df0b-0315-496d-8b05-2e6ee88ae93b",
+      "executeOnce": true,
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "ZDMZF96OBrYJ6BLY",
+          "name": "config AD"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// item là payload message từ Teams webhook\nconst item = items[0].json;\n\n// Normalize thông tin cơ bản\nconst normalized = {\n  id: item.id,\n  chatId: item.chatId,\n  replyToId: item.replyToId,\n  from: {\n    id: item.from?.user?.id,\n    displayName: item.from?.user?.displayName,\n    userIdentityType: item.from?.user?.userIdentityType,\n    tenantId: item.from?.user?.tenantId\n  },\n  createdDateTime: item.createdDateTime,\n  body: item.body || { contentType: \"text\", content: item.content || \"\" },\n  importance: item.importance,\n  attachments: item.attachments || [],\n  mentions: item.mentions || [],\n  reactions: item.reactions || []\n};\n\n// Strip HTML thành plain_text\nlet html = $input.first().json.body.content|| \"\";\nif (normalized.mentions.length) {\n  for (const mention of normalized.mentions) {\n    if (mention.mentionText) {\n      const escaped = mention.mentionText.replace(/[.*+?^${}()|[\\]\\\\]/g, \"\\\\$&\");\n      const regex = new RegExp(escaped, \"gi\");\n      html = html.replace(regex, \"\");\n    }\n  }\n}\n\nconst plainText = html\n  .replace(/<script[\\s\\S]*?>[\\s\\S]*?<\\/script>/gi, \"\")\n  .replace(/<style[\\s\\S]*?>[\\s\\S]*?<\\/style>/gi, \"\")\n  .replace(/<\\/?[^>]+(>|$)/g, \"\")\n  .replace(/&nbsp;/gi, \" \")\n  .replace(/\\s+/g, \" \")\n  .trim();\n\n// Output\nreturn [\n  {\n    json: {\n      normalized,\n      plain_text: plainText\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        992
+      ],
+      "id": "5280b93c-e164-4798-be3f-d357f216d5f1",
+      "name": "normalize_query"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        1616
+      ],
+      "id": "55113ee8-7f5b-4f1f-b329-282a389092c5",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "26g1HADJ0HR248to",
+          "name": "LLM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 2. Intent classifier",
+        "height": 352,
+        "width": 416,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        144,
+        896
+      ],
+      "typeVersion": 1,
+      "id": "e37286e6-5427-4802-b198-348f1c33bc23",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## 3. Parameter extraction",
+        "height": 352,
+        "width": 368,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        624,
+        896
+      ],
+      "typeVersion": 1,
+      "id": "7635b59c-fe2a-4f0d-98f1-6e2ac28fab6d",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## 4. Business Logic Mapper",
+        "height": 352,
+        "width": 480,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1072,
+        896
+      ],
+      "typeVersion": 1,
+      "id": "cba31e8d-1d53-4b9c-9919-c51d9e98019b",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.plain_text }}",
+        "options": {
+          "systemMessage": "System\nSửa lỗi chính tả, lỗi gõ tiếng Việt, tách từ sai, ký tự sai, biến thể teencode. Giữ nguyên nghĩa. Không viết lại câu theo văn phong khác. Không rút gọn. Không thêm thông tin. Không suy diễn ý định. Không phân loại intent. Không trả lời câu hỏi. Chỉ xuất ra chuỗi đã chỉnh sửa.\n\nAssistant\nTrả về đúng một chuỗi văn bản: phiên bản đã sửa lỗi của input. No extra text."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        -192,
+        992
+      ],
+      "id": "aaeab546-e853-4b87-b103-3266259c6db4",
+      "name": "llm_normalize"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "## Prompt Parameter Extraction\nExtract parameters only if they appear explicitly as concrete values.\nRelative time expressions (“hôm nay”, “hôm qua”, “tuần này”, “tháng này”, “năm nay”, “vừa rồi”, etc.) must not be converted to actual dates.\nFor any relative time, set the parameter to null.\n\nReturn only JSON with the fixed parameter fields.\n\nTarget parameters:\nma_phieu\nso_dien_thoai\nma_don_vi\ndia_chi\nngay\nloai_giao_lien\nten_khach_hang\nso_tien\nghi_chu\n\nRules:\nDo not infer.\nDo not convert relative date words into dates.\nExtract only explicit literal values: digits, codes, names, addresses.\nIf the user message contains no explicit value for a parameter, set it to null.\nOutput strictly JSON.\n\nExample:\nUser text: “tìm phiếu đã duyệt hôm nay” → \"ngay\": null"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        704,
+        992
+      ],
+      "id": "cdc8efdb-0675-4fc4-a96f-29c498611a1c",
+      "name": "llm_params_extraction"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "System:\nYou are an intent classifier. Read the normalized user message and return ONE JSON object only with exactly these fields:\n- intent: one of the allowed intents below, or \"fallback\"\n- confidence: float between 0.0 and 1.0\n- query: the original user message unchanged\n\nAllowed intents and rules:\n- gl_create_auto       : user wants to create a new ticket automatically / bằng AI / tạo tự động\n- gl_create_manual     : user wants to create a ticket manually / nhập tay\n- gl_query_status      : user asks about the approval/status of a ticket (keywords: \"trạng thái\", \"duyệt\", \"đang duyệt\", \"status\")\n- gl_query_fee         : user asks about fee/cost (keywords: \"cuốc phí\", \"phí\", \"giá\")\n- gl_query_delivery    : user asks about delivery/shipment or sender/receiver info (keywords: \"giao\", \"giao hàng\", \"giao liên\", \"người gửi\", \"người nhận\", \"tình trạng giao\")\n- fallback             : use when uncertain or out-of-scope\n\nClassification rules (must be followed):\n1. Keyword cues have priority. If message contains any strong cue (see keywords above) map to that intent.\n2. If multiple intents match, choose the most specific intent (delivery > status > read).\n3. If the message explicitly names a sender/receiver (patterns like \"người gửi là X\", \"gửi bởi X\", \"của X\"), prefer gl_query_delivery.\n4. Do not invent any new intents.\n5. If confidence < 0.5, set intent = \"fallback\".\n6. Do not extract parameters here. Do not return anything other than the three fields.\n\nReturn JSON only, no explanation. Example formats (not to be printed, only for model guidance):\n{\"intent\":\"gl_query_delivery\",\"confidence\":0.85,\"query\":\"tìm phiếu người gửi là Dũng\"}\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        240,
+        992
+      ],
+      "id": "b194ae56-17b5-48e2-bc8d-ea17d89b4039",
+      "name": "llm_intent_classifier"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.flags.delivery_query }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "id": "ea4271ba-d0cb-4b2d-8d19-1d29b4b16731"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6e1e266a-1166-49e1-8b84-238def56f299",
+                    "leftValue": "={{ $json.flags.date_query }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        1376,
+        992
+      ],
+      "id": "4559b27b-ed6e-41ac-8f09-43639891b223",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "content": "## CREATE",
+        "height": 464,
+        "width": 1392
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1760,
+        544
+      ],
+      "typeVersion": 1,
+      "id": "d6f57309-3468-4ef8-964f-f51bc8808664",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "# input: sharepoint_get_all_items\nall_items_raw = _('sharepoint_get_items').first().json['value']  # list of items\nsharepoint_filter = _('business_logic_mapping').first().json['sharepoint_filter']\n\nimport datetime\n\ndef normalize_date(date_str):\n    \"\"\"\n    Convert SharePoint datetime or string YYYY-MM-DD to YYYY-MM-DD for comparison\n    \"\"\"\n    if not date_str:\n        return None\n    date_str = str(date_str)\n    try:\n        # SharePoint datetime format: \"2025-09-09T17:00:00Z\"\n        dt = datetime.datetime.fromisoformat(date_str.replace(\"Z\", \"+00:00\"))\n        return dt.date().isoformat()\n    except:\n        # fallback nếu đã là YYYY-MM-DD\n        try:\n            return datetime.datetime.strptime(date_str, \"%Y-%m-%d\").date().isoformat()\n        except:\n            return date_str.lower()  # convert to lowercase string\n\ndef match(item_fields, filter_):\n    for k, v in filter_.items():\n        if k not in item_fields or not v:\n            return False\n        # chuyển cả hai về lowercase để ignore case\n        field_val = str(item_fields[k]).lower()\n        filter_val = str(v).lower()\n        # dùng partial match\n        if filter_val not in field_val:\n            return False\n    return True\n\nfiltered_items = [i for i in all_items_raw if match(i['fields'], sharepoint_filter)]\n\n# trả về array n8n\nreturn [{\"json\": i['fields']} for i in filtered_items]\n"
+      },
+      "id": "b6766828-4fb4-42ef-8230-45ecaef1eb2e",
+      "name": "Filter DATA",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2384,
+        1216
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst mockFilterAll = \"https://graph.microsoft.com/v1.0/sites/pnjcomvn.sharepoint.com,5d3a5e53-7cce-4d3e-94e1-438fdbb51cd8,30f80b54-5c4e-4024-ba92-1261a204764f/lists/054fa735-1828-412b-af04-7ece3fdaa145/items?expand=fields\";\n\n\nreturn { json: { mockFilterAll: mockFilterAll } };"
+      },
+      "id": "1a3e9745-95d3-4e23-85d0-a3bab6575d8f",
+      "name": "GET URL SharePoint",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1856,
+        1216
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.mockFilterAll }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2112,
+        1216
+      ],
+      "id": "b13c4f3a-f5c0-45df-a453-a6b61cd9123c",
+      "name": "sharepoint_get_items",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "uMNEu5KgzhqeV1j3",
+          "name": "dungnt-oauth2 api"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import json\nimport datetime\nimport re\n\ndef contains(q, words):\n    ql = (q or \"\").lower()\n    return any(w in ql for w in words)\n\ndef today_iso():\n    return datetime.date.today().isoformat()\n\ndef start_of_week_iso():\n    today = datetime.date.today()\n    start = today - datetime.timedelta(days=today.weekday())\n    return start.isoformat()\n\ndef parse_iso_date(s):\n    if not s:\n        return None\n    s = s.strip()\n    if re.match(r\"^\\d{4}-\\d{2}-\\d{2}\", s): \n        return s\n    for fmt in (\"%d/%m/%Y\", \"%d-%m-%Y\", \"%Y/%m/%d\"):\n        try:\n            return datetime.datetime.strptime(s, fmt).date().isoformat()\n        except:\n            pass\n    return None\n\ndef business_logic_mapping(intent, query, params):\n    filter_ = {}\n    flags = {}\n    q = query or \"\"\n\n    # --- DATE ---\n    if contains(q, [\"hôm nay\", \"hnay\", \"today\"]):\n        filter_[\"NgayTaoPhieu\"] = today_iso()\n        flags[\"date_query\"] = True\n    elif contains(q, [\"hôm qua\", \"yesterday\"]):\n        filter_[\"NgayTaoPhieu\"] = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()\n        flags[\"date_query\"] = True\n    elif contains(q, [\"tuần này\", \"tuan nay\"]):\n        filter_[\"DateStart\"] = start_of_week_iso()\n        filter_[\"DateEnd\"] = today_iso()\n        flags[\"date_query\"] = True\n    elif params.get(\"ngay\"):\n        d = parse_iso_date(params.get(\"ngay\"))\n        if d:\n            filter_[\"NgayTaoPhieu\"] = d\n        flags[\"date_query\"] = True\n\n    # --- STATUS ---\n    if contains(q, [\"đã duyệt\", \"da duyet\", \"approved\"]):\n        filter_[\"TrangThaiPheDuyet\"] = \"Approve\"\n    if contains(q, [\"chưa duyệt\", \"chua duyet\", \"pending\"]):\n        filter_[\"TrangThaiPheDuyet\"] = \"Pending\"\n    if contains(q, [\"đang giao\", \"in transit\"]):\n        filter_[\"TrangThai\"] = \"InTransit\"\n    if contains(q, [\"đã giao\", \"delivered\"]):\n        filter_[\"TrangThai\"] = \"Delivered\"\n\n    # --- PARAMS → SHAREPOINT ---\n    mapping = {\n        \"ten_khach_hang\": \"NguoiGuiDisplayName\",\n        \"so_dien_thoai\": \"NguoiGui_Phone\",\n        \"ma_phieu\": \"ID_GiaoLien\",\n        \"ma_don_vi\": \"PhongBan\",\n        \"dia_chi\": \"DiaChiNguoiNhan\",\n        \"so_tien\": \"SoLuong\",\n        \"loai_giao_lien\": \"LoaiBuuPham\",\n        \"ghi_chu\": \"LuuY\"\n    }\n\n    for k, v in params.items():\n        if v:\n            field = mapping.get(k)\n            if field:\n                filter_[field] = v\n\n    # --- BUSINESS FLAGS ---\n    if intent == \"gl_query_status\":\n        flags[\"requires_status\"] = True\n    if intent == \"gl_query_delivery\":\n        flags[\"delivery_query\"] = True\n    if intent == \"gl_query_fee\":\n        flags[\"fee_query\"] = True\n        if \"TrangThaiPheDuyet\" not in filter_:\n            filter_[\"TrangThaiPheDuyet\"] = \"Completed\"\n\n    return {\"sharepoint_filter\": filter_, \"flags\": flags}\n\n\n# -------------------- n8n INPUT PARSING --------------------\nintent_raw = _('llm_intent_classifier').first().json.output\n\n# parse 2 lớp: 1) unwrap outer string 2) parse inner JSON\ntry:\n    intent_json = json.loads(intent_raw)\n    if isinstance(intent_json, str):\n        intent_json = json.loads(intent_json)\nexcept Exception:\n    intent_json = {\"intent\": None, \"query\": None}\n\nintent = intent_json.get(\"intent\")\nquery = intent_json.get(\"query\")\n\nparams_raw = _('llm_params_extraction').first().json.get(\"output\", {})\nif isinstance(params_raw, str):\n    try:\n        params = json.loads(params_raw)\n    except:\n        params = {}\nelif isinstance(params_raw, dict):\n    params = params_raw\nelse:\n    params = {}\n\n# -------------------- RUN --------------------\nresult = business_logic_mapping(intent, query, params)\n\n# -------------------- RETURN n8n FORMAT --------------------\nreturn [\n    {\n        \"json\": result\n    }\n]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1168,
+        992
+      ],
+      "id": "bb0fb3ff-1c68-4253-9b9b-8631e1b3906c",
+      "name": "business_logic_mapping"
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "19:959fada8-40c9-4ea9-9a96-35acbbdfb6f1_aa0a6688-37e7-4bee-ad95-ef587115cbb8@unq.gbl.spaces",
+          "mode": "list",
+          "cachedResultName": "Nguyễn Tuấn Dũng, BOT Kinh Công (oneOnOne)",
+          "cachedResultUrl": "https://teams.microsoft.com/l/chat/19%3A959fada8-40c9-4ea9-9a96-35acbbdfb6f1_aa0a6688-37e7-4bee-ad95-ef587115cbb8%40unq.gbl.spaces/0?tenantId=6ea838f0-f529-455e-9738-147060990b55"
+        },
+        "message": "={{ $json.output }}",
+        "options": {}
+      },
+      "id": "e8b0d28e-65de-4a97-b22f-dd800c973939",
+      "name": "Send Table HTML",
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        2896,
+        1216
+      ],
+      "webhookId": "5d751a4f-a0c6-499e-a772-304310cc29ae",
+      "executeOnce": true,
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "4CXu7Tmg0Dmwx0y7",
+          "name": "Microsoft Teams account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json }}",
+        "options": {
+          "systemMessage": "Bạn là AI tạo sinh kết quả :\n- Nhận user message, thống kê kết quả và tạo câu trả lời\n- Thêm follow up liên quan\nLưu ý:\n- Nếu user message empty, trả lời \"Không tìm thấy kết quả\"\n- Nội dung phản hồi luôn ở định dạnh HTML và đính kèm link của task liên quan\n- format thời gian  là \"dd-mm-yyyy\""
+        }
+      },
+      "id": "73974a7a-0f4f-4781-926e-1c45d2d1d2b8",
+      "name": "AI Agent: Generate Filter JSON",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        2576,
+        1216
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2560,
+        1408
+      ],
+      "id": "bee4a7ea-2113-4a1e-910b-8a9a63bff8cf",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "26g1HADJ0HR248to",
+          "name": "LLM"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## READ",
+        "height": 464,
+        "width": 1392,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1760,
+        1072
+      ],
+      "typeVersion": 1,
+      "id": "d07aec10-e857-41f2-ad42-acb7110325ff",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "## UPDATE",
+        "height": 464,
+        "width": 1392
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1760,
+        1616
+      ],
+      "typeVersion": 1,
+      "id": "65f3c882-cac7-4957-8e3f-d03e7b437d18",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## DELETE",
+        "height": 464,
+        "width": 1392,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1760,
+        2144
+      ],
+      "typeVersion": 1,
+      "id": "4de75605-3554-4d52-8611-d161d564db17",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT session_data\nFROM bot_sessions\nWHERE user_id = '{{ $('normalize_query').item.json.normalized.from.id }}'\nLIMIT 1;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1104,
+        1968
+      ],
+      "id": "b9b4cc1c-040f-4284-b287-575ad99b36e7",
+      "name": "load_session",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "igirMrzkGEDENMAf",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// user_id từ Normalize Query\nconst normNode = $('normalize_query').first().json;\nconst user_id = $('normalize_query').first().json.normalized.from.id\nconst plain_text = normNode.plain_text;\n\n// old session từ node Postgres\nconst oldSession = $input.first().json.session_data || {};\n\n\nreturn [{\n    json: {\n        user_id,\n        session_data: oldSession,\n        plain_text\n        \n    }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -896,
+        1968
+      ],
+      "id": "ac88239a-dace-4ea1-a2e9-a4873b19f6ed",
+      "name": "merge_session"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO bot_sessions (user_id, session_data)\nVALUES (\n  '{{ $('intent_classifier').item.json.user_id }}',\n  '{{ JSON.stringify($('intent_classifier').item.json.session_data) }}'::jsonb\n)\nON CONFLICT (user_id)\nDO UPDATE SET session_data = EXCLUDED.session_data;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -928,
+        1632
+      ],
+      "id": "c5e38810-5036-4b99-a464-9a3a32ff8e16",
+      "name": "save_session1",
+      "credentials": {
+        "postgres": {
+          "id": "igirMrzkGEDENMAf",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const htmlMessage = `\n<div style=\"max-width: 600px; font-family: 'Segoe UI', sans-serif; background: #FFFFFF; border-radius: 10px; border: 2px solid #E1E1E1; padding: 24px; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);\">\n    <div style=\"color: #000000ff; font-size: 16px; font-weight: 600; line-height: 1.6;\">\n        ❌ Không hiểu yêu cầu của bạn\n    </div>\n    <div style=\"color: #666; font-size: 14px; margin-top: 12px;\">\n        Vui lòng thử lại hoặc gõ \"giao lien\" để xem menu chính.\n    </div>\n</div>`;\n\nreturn [{ json: { htmlMessage } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        2448
+      ],
+      "id": "0191cb16-5856-4e60-b136-ac0e503b3371",
+      "name": "Build Fallback HTML"
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "19:959fada8-40c9-4ea9-9a96-35acbbdfb6f1_aa0a6688-37e7-4bee-ad95-ef587115cbb8@unq.gbl.spaces",
+          "mode": "list",
+          "cachedResultName": "Nguyễn Tuấn Dũng, BOT Kinh Công (oneOnOne)",
+          "cachedResultUrl": "https://teams.microsoft.com/l/chat/19%3A959fada8-40c9-4ea9-9a96-35acbbdfb6f1_aa0a6688-37e7-4bee-ad95-ef587115cbb8%40unq.gbl.spaces/0?tenantId=6ea838f0-f529-455e-9738-147060990b55"
+        },
+        "contentType": "html",
+        "message": "={{ $json.htmlMessage }}",
+        "options": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        496,
+        2448
+      ],
+      "id": "101db417-64c8-45fa-a39e-9396272ddc9e",
+      "name": "Send Message",
+      "webhookId": "f2f86051-2227-422a-9d26-c4e709991d48",
+      "executeOnce": true,
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "4CXu7Tmg0Dmwx0y7",
+          "name": "Microsoft Teams account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const answerText = $('intent_classifier').first().json.direct_answer || '';\nconst lines = answerText.split('\\n');\nconst introLines = [];\nconst buttons = [];\nconst optionRegex = /^(\\d+)\\.\\s*(.*)$/;\n\nfor (const line of lines) {\n    const trimmed = line.trim();\n    const match = trimmed.match(optionRegex);\n    if (match) {\n        const optionNum = match[1];\n        const optionText = match[2];\n        buttons.push(`<div style=\"display: block; background: linear-gradient(135deg, #0078D4 0%, #005A9E 100%); color: #000000ff; font-weight: 600; font-size: 15px; padding: 16px 20px; border-radius: 8px; margin: 10px 0; box-shadow: 0 2px 6px rgba(0, 120, 212, 0.3); border-left: 4px solid #005A9E;\"><span style=\"margin-right: 10px;\">▸</span>${optionNum}. ${optionText}</div>`);\n    } else if (buttons.length === 0 && trimmed) {\n        introLines.push(trimmed);\n    }\n}\n\nconst mainText = introLines.join('<br>');\n\nconst htmlMessage = `\n<div style=\"max-width: 600px; font-family: 'Segoe UI', sans-serif; background: #FFFFFF; border-radius: 10px; border: 2px solid #E1E1E1; padding: 0; box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12); overflow: hidden;\">\n    <div style=\"background: #FFFFFF; padding: 24px; border-bottom: 2px solid #E1E1E1;\">\n        <div style=\"color: #000000ff; font-size: 16px; font-weight: 600; line-height: 1.6;\">\n            ${mainText}\n        </div>\n    </div>\n    <div style=\"padding: 20px 24px; background: #FFFFFF;\">\n        ${buttons.length > 0 ? `\n            <div style=\"color: #000000ff; font-size: 14px; font-weight: 700; margin-bottom: 14px;\">\n                Tùy chọn:\n            </div>\n            <div>${buttons.join('')}</div>\n        ` : ''}\n    </div>\n</div>`;\n\nreturn [{ json: { htmlMessage } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        2608
+      ],
+      "id": "a09b9bd5-d452-4476-9bf5-ab36aab9fc1b",
+      "name": "Parse Menu / Parse Text → HTML"
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "19:959fada8-40c9-4ea9-9a96-35acbbdfb6f1_aa0a6688-37e7-4bee-ad95-ef587115cbb8@unq.gbl.spaces",
+          "mode": "list",
+          "cachedResultName": "Nguyễn Tuấn Dũng, BOT Kinh Công (oneOnOne)",
+          "cachedResultUrl": "https://teams.microsoft.com/l/chat/19%3A959fada8-40c9-4ea9-9a96-35acbbdfb6f1_aa0a6688-37e7-4bee-ad95-ef587115cbb8%40unq.gbl.spaces/0?tenantId=6ea838f0-f529-455e-9738-147060990b55"
+        },
+        "contentType": "html",
+        "message": "={{ $json.htmlMessage }}",
+        "options": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        496,
+        2608
+      ],
+      "id": "9a2a56a0-cf14-4a10-b381-9e75ebae8095",
+      "name": "Send Message1",
+      "webhookId": "f2f86051-2227-422a-9d26-c4e709991d48",
+      "executeOnce": true,
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "4CXu7Tmg0Dmwx0y7",
+          "name": "Microsoft Teams account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "language": "python",
+        "pythonCode": "import re\nimport unicodedata\n\ndef norm(x):\n    x = x.lower()\n    x = unicodedata.normalize('NFD', x)\n    x = ''.join(c for c in x if unicodedata.category(c) != 'Mn')\n    x = re.sub(r'\\s+', ' ', x).strip()\n    return x\n\nmenu = {\n    \"gl_introduce\": {\"1\": \"gl_guide\", \"2\": \"gl_create_manual\", \"3\": \"gl_create_auto\", \"4\": \"gl_read\"},\n    \"gl_read\": {\"1\": \"gl_read_status\", \"2\": \"gl_read_delivery_status\", \"3\": \"gl_read_fee\", \"4\": \"gl_read_dates\", \"0\": \"gl_introduce\"},\n    \"gl_create_auto\": {\"1\": \"gl_create_new\", \"2\": \"gl_create_from_old\", \"0\": \"gl_introduce\"}\n}\n\npatterns = [\n    (\"gl_introduce\", [\"giao lien\"]),\n    (\"gl_guide\", [\"huong dan\", \"huong dan su dung\"]),\n    (\"gl_create_manual\", [\"tu dat\", \"tao phieu thu cong\"]),\n    (\"gl_create_auto\", [\"ai tao phieu\", \"tao phieu ai\"]),\n    (\"gl_read\", [\"tra cuu\", \"xem phieu\"]),\n    (\"gl_read_status\", [\"trang thai\", \"duyet\"]),\n    (\"gl_read_delivery_status\", [\"tinh trang\", \"giao hang\"]),\n    (\"gl_read_fee\", [\"cuoc phi\", \"phi\", \"gia\"]),\n    (\"gl_read_dates\", [\"ngay giao\", \"ngay nhan\"]),\n    (\"gl_create_new\", [\"tao moi\", \"phieu moi\"]),\n    (\"gl_create_from_old\", [\"phieu cu\", \"tu phieu cu\"]),\n    (\"gl_cost_report\", [\"chi phi\", \"tong hop\", \"cost\"]),\n    (\"gl_batch_create\", [\"hang loat\", \"batch\"])\n]\n\nanswer_map = {\n    \"gl_introduce\": \"MENU_INTRO\",\n    \"gl_guide\": \"GUIDE_TEXT\",\n    \"gl_create_manual\": \"CREATE_MANUAL_LINK\",\n    \"gl_create_auto\": \"MENU_AUTO\",\n    \"gl_read\": \"MENU_READ\",\n    \"gl_read_status\": \"QUERY_SHAREPOINT\",\n    \"gl_read_delivery_status\": \"QUERY_SHAREPOINT\",\n    \"gl_read_fee\": \"QUERY_SHAREPOINT\",\n    \"gl_read_dates\": \"QUERY_SHAREPOINT\",\n    \"gl_create_new\": \"FORM_COLLECTION\",\n    \"gl_create_from_old\": \"FORM_COLLECTION\",\n    \"gl_cost_report\": \"COST_AGG\",\n    \"gl_batch_create\": \"BATCH_UPLOAD\"\n}\n\nsrc = _input.first().json\nuser_id = src.get(\"user_id\")\nplain_text_raw = src.get(\"plain_text\")\nplain_text = norm(plain_text_raw)\nold_session = src.get(\"session_data\") or {}\nold_ctx = old_session.get(\"context_intent\")\n\nintent = None\noutput = None\nrequires_query = False\nnew_context = old_ctx\n\n# numeric navigation\nif plain_text in [\"0\",\"1\",\"2\",\"3\",\"4\"] and old_ctx in menu:\n    if plain_text in menu[old_ctx]:\n        intent = menu[old_ctx][plain_text]\n        output = answer_map[intent]\n\n        # nếu là back\n        if intent == \"gl_introduce\":\n            new_context = \"gl_introduce\"\n        else:\n            new_context = intent if intent in menu else old_ctx\n\n        requires_query = (output == \"QUERY_SHAREPOINT\")\n# keyword match\nif not intent:\n    for key, pats in patterns:\n        for p in pats:\n            if norm(p) in plain_text:\n                intent = key\n                output = answer_map[key]\n                new_context = key if key in menu else old_ctx\n                requires_query = (output == \"QUERY_SHAREPOINT\")\n                break\n        if intent:\n            break\n\n# session merge: giữ nguyên context nếu không thay đổi\nnew_session = {\n    **old_session,\n    \"context_intent\": new_context,\n    \"intent\": intent\n}\n\nreturn {\n    \"user_id\": user_id,\n    \"intent\": intent,\n    \"direct_answer\": output,\n    \"requires_query\": requires_query,\n    \"context_intent\": new_context,\n    \"plain_text\": plain_text_raw,\n    \"session_data\": new_session\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -704,
+        2608
+      ],
+      "id": "59259fe6-fa35-4ba5-8af8-05910f944f9a",
+      "name": "intent_classifier"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO bot_sessions (user_id, session_data)\nVALUES (\n  '{{ $('intent_classifier').item.json.user_id }}',\n  '{{ JSON.stringify($('intent_classifier').item.json.session_data) }}'::jsonb\n)\nON CONFLICT (user_id)\nDO UPDATE SET session_data = EXCLUDED.session_data;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        704,
+        2448
+      ],
+      "id": "c5da79a3-e325-4127-b100-fe64e403483b",
+      "name": "save_session",
+      "credentials": {
+        "postgres": {
+          "id": "igirMrzkGEDENMAf",
+          "name": "n8n"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('intent_classifier').item.json.intent }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty"
+                    },
+                    "id": "1257116a-746a-4d0e-abe0-b64f6e3f5c28"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ae935bb7-b440-401d-ae31-9d02dfcfb15e",
+                    "leftValue": "={{ $json.requires_query }}",
+                    "rightValue": "=0",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "false",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "ddf34d2d-0aab-4538-aa05-af80a318d90c",
+                    "leftValue": "={{ $json.requires_query }}",
+                    "rightValue": "true",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.3,
+      "position": [
+        -240,
+        2592
+      ],
+      "id": "74830da7-624b-48b1-a1e3-06b9d7a6ae1b",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO bot_sessions (user_id, session_data)\nVALUES (\n  '{{ $('intent_classifier').item.json.user_id }}',\n  '{{ JSON.stringify($('intent_classifier').item.json.session_data) }}'::jsonb\n)\nON CONFLICT (user_id)\nDO UPDATE SET session_data = EXCLUDED.session_data;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        704,
+        2608
+      ],
+      "id": "0c46a983-61ac-468d-ab15-5dd209788c36",
+      "name": "save_session2",
+      "credentials": {
+        "postgres": {
+          "id": "igirMrzkGEDENMAf",
+          "name": "n8n"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Get chat message": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "normalize_query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft Teams Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get chat message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "normalize_query": {
+      "main": [
+        [
+          {
+            "node": "load_session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "llm_intent_classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "llm_params_extraction",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "llm_normalize",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "llm_normalize": {
+      "main": [
+        [
+          {
+            "node": "llm_intent_classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "llm_intent_classifier": {
+      "main": [
+        [
+          {
+            "node": "llm_params_extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "llm_params_extraction": {
+      "main": [
+        [
+          {
+            "node": "business_logic_mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "GET URL SharePoint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GET URL SharePoint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        []
+      ]
+    },
+    "GET URL SharePoint": {
+      "main": [
+        [
+          {
+            "node": "sharepoint_get_items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sharepoint_get_items": {
+      "main": [
+        [
+          {
+            "node": "Filter DATA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "business_logic_mapping": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent: Generate Filter JSON": {
+      "main": [
+        [
+          {
+            "node": "Send Table HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Table HTML": {
+      "main": [
+        [
+          {
+            "node": "save_session1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter DATA": {
+      "main": [
+        [
+          {
+            "node": "AI Agent: Generate Filter JSON",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent: Generate Filter JSON",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "load_session": {
+      "main": [
+        [
+          {
+            "node": "merge_session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "merge_session": {
+      "main": [
+        [
+          {
+            "node": "intent_classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Fallback HTML": {
+      "main": [
+        [
+          {
+            "node": "Send Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Message": {
+      "main": [
+        [
+          {
+            "node": "save_session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Menu / Parse Text → HTML": {
+      "main": [
+        [
+          {
+            "node": "Send Message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Message1": {
+      "main": [
+        [
+          {
+            "node": "save_session2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "intent_classifier": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Build Fallback HTML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Menu / Parse Text → HTML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "llm_normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "54fb5272-3b54-47a4-8f70-1bb530ea1a9c",
+  "meta": {
+    "instanceId": "1221463762e975ec08371009b2baf90d56310f22fb4a2a6d98905352617a92c7"
+  },
+  "id": "QPnwnGgKLkgtA91Q",
+  "tags": []
+}

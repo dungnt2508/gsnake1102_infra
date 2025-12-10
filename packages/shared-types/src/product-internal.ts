@@ -1,4 +1,4 @@
-import { ProductType, ProductStatus, ProductReviewStatus } from './enums';
+import { ProductType, ProductStatus, ProductReviewStatus, ProductPriceType } from './enums';
 
 /**
  * Product model (internal - snake_case for database)
@@ -17,12 +17,15 @@ export interface Product {
     preview_image_url?: string;
     is_free: boolean;
     price?: number;
+    currency?: string;
+    price_type?: ProductPriceType;
     status: ProductStatus;
     review_status: ProductReviewStatus;
     reviewed_at?: Date | null;
     reviewed_by?: string | null;
     rejection_reason?: string | null;
     downloads: number;
+    sales_count?: number;
     rating: number;
     reviews_count: number;
     version?: string;
@@ -30,6 +33,19 @@ export interface Product {
     features: string[];
     install_guide?: string;
     metadata: Record<string, any>;
+    // Phase 1 new fields
+    changelog?: string;
+    license?: string;
+    author_contact?: string;
+    support_url?: string;
+    screenshots?: string[];
+    platform_requirements?: Record<string, any>;
+    ownership_declaration?: boolean;
+    ownership_proof_url?: string;
+    terms_accepted_at?: Date | null;
+    security_scan_status?: string;
+    security_scan_result?: Record<string, any>;
+    security_scan_at?: Date | null;
     created_at: Date;
     updated_at: Date;
 }
@@ -49,12 +65,24 @@ export interface CreateProductInput {
     preview_image_url?: string;
     is_free: boolean;
     price?: number;
+    currency?: string;
+    price_type?: ProductPriceType;
     status?: ProductStatus;
     version?: string;
     requirements?: string[];
     features?: string[];
     install_guide?: string;
     metadata?: Record<string, any>;
+    // Phase 1 new fields
+    changelog?: string;
+    license?: string;
+    author_contact?: string;
+    support_url?: string;
+    screenshots?: string[];
+    platform_requirements?: Record<string, any>;
+    ownership_declaration?: boolean;
+    ownership_proof_url?: string;
+    terms_accepted_at?: Date | null;
 }
 
 /**
@@ -71,12 +99,24 @@ export interface UpdateProductInput {
     preview_image_url?: string;
     is_free?: boolean;
     price?: number;
+    currency?: string;
+    price_type?: ProductPriceType;
     status?: ProductStatus;
     version?: string;
     requirements?: string[];
     features?: string[];
     install_guide?: string;
     metadata?: Record<string, any>;
+    // Phase 1 new fields
+    changelog?: string;
+    license?: string;
+    author_contact?: string;
+    support_url?: string;
+    screenshots?: string[];
+    platform_requirements?: Record<string, any>;
+    ownership_declaration?: boolean;
+    ownership_proof_url?: string;
+    terms_accepted_at?: Date | null;
 }
 
 /**
@@ -92,7 +132,8 @@ export interface ProductQueryFilters {
     tags?: string[];
     limit?: number;
     offset?: number;
-    sort_by?: 'created_at' | 'rating' | 'downloads';
+    sort_by?: 'created_at' | 'rating' | 'downloads' | 'price' | 'sales_count';
+    price_type?: ProductPriceType;
     sort_order?: 'asc' | 'desc';
 }
 

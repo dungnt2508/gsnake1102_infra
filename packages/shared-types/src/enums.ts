@@ -52,3 +52,15 @@ export enum ToolRequestStatus {
     FAILED = 'failed',
 }
 
+export enum ProductPriceType {
+    FREE = 'free',
+    ONETIME = 'onetime',
+    SUBSCRIPTION = 'subscription',
+}
+
+export enum ReviewStatus {
+    PENDING = 'pending',
+    APPROVED = 'approved',
+    REJECTED = 'rejected',
+}
+
