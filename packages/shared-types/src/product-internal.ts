@@ -15,6 +15,8 @@ export interface Product {
     workflow_file_url?: string;
     thumbnail_url?: string;
     preview_image_url?: string;
+    video_url?: string;
+    contact_channel?: string;
     is_free: boolean;
     price?: number;
     currency?: string;
@@ -40,6 +42,7 @@ export interface Product {
     support_url?: string;
     screenshots?: string[];
     platform_requirements?: Record<string, any>;
+    required_credentials?: string[];
     ownership_declaration?: boolean;
     ownership_proof_url?: string;
     terms_accepted_at?: Date | null;
@@ -63,6 +66,8 @@ export interface CreateProductInput {
     workflow_file_url?: string;
     thumbnail_url?: string;
     preview_image_url?: string;
+    video_url?: string;
+    contact_channel?: string;
     is_free: boolean;
     price?: number;
     currency?: string;
@@ -80,6 +85,7 @@ export interface CreateProductInput {
     support_url?: string;
     screenshots?: string[];
     platform_requirements?: Record<string, any>;
+    required_credentials?: string[];
     ownership_declaration?: boolean;
     ownership_proof_url?: string;
     terms_accepted_at?: Date | null;
@@ -97,6 +103,8 @@ export interface UpdateProductInput {
     workflow_file_url?: string;
     thumbnail_url?: string;
     preview_image_url?: string;
+    video_url?: string;
+    contact_channel?: string;
     is_free?: boolean;
     price?: number;
     currency?: string;
@@ -114,6 +122,7 @@ export interface UpdateProductInput {
     support_url?: string;
     screenshots?: string[];
     platform_requirements?: Record<string, any>;
+    required_credentials?: string[];
     ownership_declaration?: boolean;
     ownership_proof_url?: string;
     terms_accepted_at?: Date | null;

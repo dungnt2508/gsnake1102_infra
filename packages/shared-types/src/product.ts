@@ -14,6 +14,8 @@ export interface ProductDto {
     workflowFileUrl?: string;
     thumbnailUrl?: string;
     previewImageUrl?: string;
+    videoUrl?: string;
+    contactChannel?: string;
     isFree: boolean;
     price?: number;
     status: ProductStatus;
@@ -36,6 +38,7 @@ export interface ProductDto {
     supportUrl?: string;
     screenshots?: string[];
     platformRequirements?: Record<string, any>;
+    requiredCredentials?: string[];
     ownershipDeclaration?: boolean;
     ownershipProofUrl?: string;
     termsAcceptedAt?: string | null;
@@ -58,6 +61,8 @@ export interface CreateProductDto {
     workflowFileUrl?: string;
     thumbnailUrl?: string;
     previewImageUrl?: string;
+    videoUrl?: string;
+    contactChannel?: string;
     isFree: boolean;
     price?: number;
     version?: string;
@@ -72,6 +77,7 @@ export interface CreateProductDto {
     supportUrl?: string;
     screenshots?: string[];
     platformRequirements?: Record<string, any>;
+    requiredCredentials?: string[];
     ownershipDeclaration?: boolean;
     ownershipProofUrl?: string;
 }
@@ -88,6 +94,8 @@ export interface UpdateProductDto {
     workflowFileUrl?: string;
     thumbnailUrl?: string;
     previewImageUrl?: string;
+    videoUrl?: string;
+    contactChannel?: string;
     isFree?: boolean;
     price?: number;
     version?: string;
@@ -102,6 +110,7 @@ export interface UpdateProductDto {
     supportUrl?: string;
     screenshots?: string[];
     platformRequirements?: Record<string, any>;
+    requiredCredentials?: string[];
     ownershipDeclaration?: boolean;
     ownershipProofUrl?: string;
 }
